@@ -1,0 +1,8 @@
+{
+  "appId": "es.jorge.medidorpk",
+  "appName": "medidorPK",
+  "webDir": "dist",
+  "android": {
+    "useLegacyBridge": true
+  }
+}

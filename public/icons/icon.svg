@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#111418"/>
+  <!-- carretera en perspectiva -->
+  <path d="M206 150 L306 150 L430 512 L82 512 Z" fill="#3a4049"/>
+  <path d="M246 170 h20 l6 50 h-32 z M238 250 h36 l9 70 h-54 z M226 360 h60 l13 100 h-86 z" fill="#ffffff"/>
+  <!-- marcador de distancia -->
+  <path d="M256 40 c-50 0 -88 38 -88 86 c0 62 88 140 88 140 s88 -78 88 -140 c0 -48 -38 -86 -88 -86 z" fill="#ff6a00"/>
+  <circle cx="256" cy="126" r="34" fill="#111418"/>
+</svg>

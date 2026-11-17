@@ -1,0 +1,64 @@
+# Compila el APK de Android y lo publica en Releases como "medidorPK.apk".
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:android
+      - run: npx cap sync android
+      - name: Preparar clave de firma (desde los secretos del repositorio)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Faltan los secretos ANDROID_KEYSTORE_BASE64 y ANDROID_KEYSTORE_PASSWORD"
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/medidorpk.p12"
+      - name: Compilar APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/medidorpk.p12
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          rm -f "$ANDROID_KEYSTORE_PATH"
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk medidorPK.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: medidorPK-apk
+          path: medidorPK.apk
+      - name: Publicar en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk --yes --cleanup-tag || true
+          gh release create apk medidorPK.apk \
+            --title "medidorPK para Android (build ${{ github.run_number }})" \
+            --notes "Descarga **medidorPK.apk** desde el móvil Android y ábrelo para instalar (permite 'instalar apps desconocidas' si lo pide). Se puede instalar encima de una versión anterior."

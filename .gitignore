@@ -1,0 +1,15 @@
+node_modules
+dist
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/.idea
+*.log
+
+# Claves de firma: nunca en el repositorio
+*.p12
+*.jks
+*.keystore
+SECRETOS*.txt
+.claude/
