@@ -1,18 +1,15 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// - GitHub Pages: la app vive en https://jorgeurenarubia.github.io/medidorPK/
-// - Android (Capacitor): rutas relativas y sin service worker  →  npm run build:android
-export default defineConfig(({ command, mode }) => {
-  const android = mode === 'android';
-  const base = command === 'serve' ? '/' : android ? './' : '/medidorPK/';
+// La app vive en GitHub Pages: https://jorgeurenarubia.github.io/medidorPK/
+export default defineConfig(({ command }) => {
+  const base = command === 'serve' ? '/' : '/medidorPK/';
   return {
     base,
     build: { outDir: 'dist', target: 'es2020' },
     server: { host: true },
     plugins: [
       VitePWA({
-        disable: android,
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],

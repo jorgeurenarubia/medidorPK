@@ -1,10 +1,7 @@
 // Exportar y compartir: resumen de texto (WhatsApp/email), GPX del recorrido, CSV del historial.
 
-import { Capacitor } from '@capacitor/core';
 import { formatKm, formatMeters, formatDuration } from './geo.js';
 import { formatPk, endPk } from './pk.js';
-
-const isNative = Capacitor.isNativePlatform();
 
 const fmtDate = (ms) =>
   new Date(ms).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
@@ -97,8 +94,6 @@ export function safeFileName(s) {
  * no perder el gesto del usuario (requisito de Safari).
  */
 export async function share({ title, text, file }) {
-  if (isNative) return shareNative({ title, text, file });
-
   if (file) {
     const f = new File([file.content], file.name, { type: file.mime });
     if (navigator.canShare?.({ files: [f] })) {
@@ -138,21 +133,4 @@ function download(file) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-}
-
-async function shareNative({ title, text, file }) {
-  const { Share } = await import('@capacitor/share');
-  if (!file) {
-    await Share.share({ title, text, dialogTitle: title });
-    return 'shared';
-  }
-  const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-  const res = await Filesystem.writeFile({
-    path: file.name,
-    data: file.content,
-    directory: Directory.Cache,
-    encoding: Encoding.UTF8,
-  });
-  await Share.share({ title, files: [res.uri], dialogTitle: title });
-  return 'shared';
 }

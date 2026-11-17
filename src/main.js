@@ -2,7 +2,7 @@ import './style.css';
 import { Tracker } from './tracker.js';
 import { formatKm, formatMeters, formatDuration } from './geo.js';
 import { formatPk, endPk } from './pk.js';
-import { watchLocation, isNative } from './location-source.js';
+import { watchLocation } from './location-source.js';
 import { keepScreenOn, wakeLockSupported } from './wakelock.js';
 import * as store from './storage.js';
 import { summaryText, toGpx, toCsv, share, tramoTitle, safeFileName } from './export.js';
@@ -115,7 +115,7 @@ function renderMedir() {
   const p = prefs();
   let direction = p.direction ?? 1;
   const installHint =
-    isIOS && !isStandalone && !isNative
+    isIOS && !isStandalone
       ? `<div class="banner">Para instalarla en el iPhone: pulsa <b>Compartir</b> <span class="ios-share">⬆︎</span> y luego <b>"Añadir a pantalla de inicio"</b>.</div>`
       : '';
   const simHint = simulationSpeed() ? `<div class="banner warn">Modo simulación (GPS falso ×${simulationSpeed()})</div>` : '';
@@ -135,7 +135,7 @@ function renderMedir() {
       </label>
     </section>
     <button id="start" class="big go">INICIAR</button>
-    <p class="hint">Pulsa al empezar el tramo y "Terminar" al acabar. ${isNative ? '' : 'Deja la app abierta y la pantalla encendida mientras mides.'}</p>
+    <p class="hint">Pulsa al empezar el tramo y "Terminar" al acabar. Deja la app abierta y la pantalla encendida mientras mides.</p>
   `;
   bindDirectionToggle((d) => (direction = d));
   $('#start').addEventListener('click', () => {
@@ -204,7 +204,7 @@ async function persistCurrent(force = false) {
 
 function renderMidiendo() {
   const paused = tracker.status === 'paused';
-  const showWakeHint = !isNative && !wakeLockSupported;
+  const showWakeHint = !wakeLockSupported;
   app.innerHTML = `
     <header class="top row">
       <h1>medidor<span>PK</span></h1>
@@ -442,26 +442,14 @@ document.addEventListener('visibilitychange', () => {
   if (!tracker) return;
   if (document.visibilityState === 'hidden') {
     persistCurrent();
-  } else if (!isNative && tracker.status !== 'finished') {
+  } else if (tracker.status !== 'finished') {
     // iOS puede dejar de entregar posiciones tras volver del segundo plano: se reinicia el GPS.
     startGps();
   }
 });
 window.addEventListener('pagehide', () => persistCurrent());
 
-async function setupNative() {
-  if (!isNative) return;
-  const { App } = await import('@capacitor/app');
-  App.addListener('backButton', () => {
-    if (view.name === 'detalle') go('historial');
-    else if (view.name === 'historial') go('medir');
-    else if (tracker) App.minimizeApp(); // midiendo: no cerrar, solo minimizar
-    else App.exitApp();
-  });
-}
-
 async function init() {
-  setupNative();
   try {
     const saved = await store.loadCurrent();
     if (saved?.tracker && (saved.tracker.status === 'running' || saved.tracker.status === 'paused')) {
